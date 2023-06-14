@@ -1,0 +1,20 @@
+const jwt = require("jsonwebtoken");
+const { getEnv } = require("../config");
+const { getError } = require("../helpers");
+const { getUserfromId } = require("../database_queries/Auth");
+
+module.exports = async function(req, res, next) {
+    const token = req.header("Authorization");
+    if (!token) {
+        return res.status(403).send(getError("Access Denied!"));
+    }
+    try {
+        const verified = jwt.verify(token, getEnv("ADMIN_JWT_SECERET"));
+        next();
+    } catch (catchError) {
+        if (catchError && catchError.message) {
+            return res.status(400).send(getError(catchError.message));
+        }
+        return res.status(400).send(getError("Invalid token!."));
+    }
+};

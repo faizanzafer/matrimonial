@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id          String  @id @default(cuid())
+  firstname   String  @db.VarChar(150)
+  lastname    String  @db.VarChar(150)
+  email       String  @db.VarChar(150)
+  password    String  @db.VarChar(150)
+  picture_url String?
+}
+
+model Users {
+  id                       String        @id @default(cuid())
+  user_name                String?       @db.VarChar(150)
+  firstname                String?       @db.VarChar(150)
+  lastname                 String?       @db.VarChar(150)
+  email                    String        @db.VarChar(150)
+  phone                    String?       @db.VarChar(150)
+  gender                   String?       @db.VarChar(150)
+  age                      Float?
+  ziodic_sign              String?       @db.VarChar(150)
+  education                String?       @db.VarChar(150)
+  height                   Float?
+  status                   String?       @db.VarChar(150)
+  body_type                String?       @db.VarChar(150)
+  profession               String?       @db.VarChar(150)
+  religion                 String?       @db.VarChar(150)
+  // picture_url              String?
+  profile_picture_url      String?
+  longitude                Float?
+  latitude                 Float?
+  city                     String?       @db.VarChar(150)
+  country                  String?       @db.VarChar(150)
+  password                 String?       @db.VarChar(150)
+  description              String?       @db.VarChar(250)
+  social_auth_provider     String?       @db.VarChar(150)
+  social_auth_id           String?       @db.VarChar(150)
+  is_social_login          Boolean       @default(false)
+  is_registered            Boolean       @default(false)
+  show_profile_picture     Boolean?
+  show_private_picture     Boolean?
+  show_phone_number        Boolean       @default(false)
+  show_notifications       Boolean       @default(true)
+  online_status            Boolean?      @default(false)
+  is_block                 Boolean       @default(false)
+  online_status_updated_at DateTime?     @updatedAt
+  fcm_token                String?
+  created_at               DateTime?     @default(now())
+  updated_at               DateTime?     @updatedAt
+  login_attempts           Int?          @default(0)
+  locked_at                DateTime?
+  admin_approval           LogInApproval @default(PENDING)
+
+  gallery                 UserGallery[]
+  preferences             UserPreferences?  @relation(fields: [userPreferencesId], references: [id])
+  my_liked_profiles       LikeProfile[]     @relation("liker")
+  my_profile_likes        LikeProfile[]     @relation("liked")
+  my_requests             RequestPictures[] @relation("requester")
+  other_user_request      RequestPictures[] @relation("requested")
+  mine_notification       Notification[]    @relation("notifisender")
+  other_notification      Notification[]    @relation("notifireciever")
+  user_i_block            BlockProfile[]    @relation("blocked")
+  user_blocked_me         BlockProfile[]    @relation("blocker")
+  chat_user_i_block       ChatBlock[]       @relation("chat_blocked")
+  chat_user_blocked_me    ChatBlock[]       @relation("chat_blocker")
+  senders_messages        ChannelMessages[] @relation("sender")
+  receivers_messages      ChannelMessages[] @relation("receiver")
+  primary_user_channels   UserChannel[]     @relation("primary_user")
+  secondary_user_channels UserChannel[]     @relation("secondary_user")
+  userPreferencesId       String?
+}
+
+model UserGallery {
+  id          String   @id @default(cuid())
+  user_id     String
+  picture_url String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  user        Users    @relation(fields: [user_id], references: [id])
+}
+
+model UserPreferences {
+  id          String   @id @default(cuid())
+  user_id     String
+  preferences String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  Users       Users[]
+}
+
+model OtpVerify {
+  id              String   @id @default(cuid())
+  user_identifier String   @db.VarChar(150)
+  otp             Int
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model ResetPassword {
+  id              String   @id @default(cuid())
+  user_identifier String   @db.VarChar(150)
+  otp             Int
+  is_verified     Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model LikeProfile {
+  id            String         @id @default(cuid())
+  liker_id      String
+  liked_id      String
+  interest      String
+  status        LikeApproval   @default(PENDING)
+  liker         Users          @relation(fields: [liker_id], references: [id], name: "liker")
+  liked         Users          @relation(fields: [liked_id], references: [id], name: "liked")
+  notifications Notification[]
+}
+
+model RequestPictures {
+  id             String         @id @default(cuid())
+  first_user_id  String
+  second_user_id String
+  permissions    Boolean        @default(false)
+  first_user     Users          @relation(fields: [first_user_id], references: [id], name: "requester")
+  second_user    Users          @relation(fields: [second_user_id], references: [id], name: "requested")
+  notifications  Notification[]
+}
+
+model BlockProfile {
+  id         String @id @default(cuid())
+  blocker_id String
+  blocked_id String
+  blocker    Users  @relation(fields: [blocker_id], references: [id], name: "blocked")
+  blocked    Users  @relation(fields: [blocked_id], references: [id], name: "blocker")
+}
+
+model ChatBlock {
+  id         String @id @default(cuid())
+  blocker_id String
+  blocked_id String
+  blocker    Users  @relation(fields: [blocker_id], references: [id], name: "chat_blocked")
+  blocked    Users  @relation(fields: [blocked_id], references: [id], name: "chat_blocker")
+}
+
+model FeedBack {
+  id      String @id @default(cuid())
+  email   String
+  name    String
+  message String
+}
+
+model UserChannel {
+  id               String            @id @default(cuid())
+  from_id          String
+  to_id            String
+  // delete_conversation_for_from_id Boolean?          @default(false)
+  // delete_conversation_for_to_id   Boolean?          @default(false)
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
+  primary_user     Users             @relation("primary_user", fields: [from_id], references: [id])
+  secondary_user   Users             @relation("secondary_user", fields: [to_id], references: [id])
+  channel_messages ChannelMessages[]
+}
+
+model ChannelMessages {
+  id                String      @id @default(cuid())
+  from_id           String
+  to_id             String
+  users_channels_id String
+  message_body      String      @default("")
+  seen              Boolean?    @default(false)
+  message_type      MessageType @default(TEXT)
+  attachments       String?
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  sender            Users       @relation("sender", fields: [from_id], references: [id])
+  receiver          Users       @relation("receiver", fields: [to_id], references: [id])
+  usersChannelsId   UserChannel @relation(fields: [users_channels_id], references: [id])
+}
+
+model Notification {
+  id                String           @id @default(cuid())
+  from_id           String
+  to_id             String
+  notification_type NotificationType
+  seen              Boolean          @default(false)
+  request_id        String?
+  private_req_id    String?
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+  sender            Users            @relation(fields: [from_id], references: [id], name: "notifisender")
+  reciever          Users            @relation(fields: [to_id], references: [id], name: "notifireciever")
+  likes             LikeProfile?     @relation(fields: [request_id], references: [id])
+  requests          RequestPictures? @relation(fields: [private_req_id], references: [id])
+}
+
+model ZodiacSign {
+  id           String   @id @default(cuid())
+  sign_name    String?  @db.VarChar(150)
+  sign_picture String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
+enum LogInApproval {
+  APPROVED
+  PENDING
+}
+
+enum LikeApproval {
+  APPROVED
+  PENDING
+}
+
+enum MessageType {
+  TEXT
+  MEDIA
+}
+
+enum NotificationType {
+  LIKE
+  REQUEST
+  REQ_ACCEPT
+  PRIVATE
+  ACCEPT
+  VISIT
+}
